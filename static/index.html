@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iMac Report RAG</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f6f4; --panel: #ffffff; --ink: #1d1d1f; --muted: #6e6e73; --line: #e3e3e0;
+    --accent: #1f7a4d; --accent-soft: #e5f3eb; --user: #1d1d1f; --user-ink: #fff;
+    --t-table: #2f6fb3; --t-figure: #9a4fd0; --t-callout: #c77700; --t-footnote: #b23b3b; --t-text: #55606b; --t-summary: #3c8c7c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141414; --panel: #1e1e1f; --ink: #ececec; --muted: #9a9aa0; --line: #2e2e30;
+      --accent: #4cc38a; --accent-soft: #1d3328; --user: #ececec; --user-ink: #141414;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141414; --panel: #1e1e1f; --ink: #ececec; --muted: #9a9aa0; --line: #2e2e30;
+    --accent: #4cc38a; --accent-soft: #1d3328; --user: #ececec; --user-ink: #141414;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) 380px; height: 100vh; }
+  main { display: flex; flex-direction: column; min-width: 0; }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 17px; margin: 0; }
+  header span { color: var(--muted); font-size: 13px; }
+  #log { flex: 1; overflow-y: auto; padding: 24px; }
+  .msg { max-width: 780px; margin: 0 auto 20px; }
+  .msg.user .bubble { background: var(--user); color: var(--user-ink); margin-left: auto; width: fit-content; max-width: 80%; border-radius: 16px 16px 4px 16px; padding: 10px 14px; }
+  .msg.bot .bubble { background: var(--panel); border: 1px solid var(--line); border-radius: 4px 16px 16px 16px; padding: 14px 18px; }
+  .bubble p:first-child { margin-top: 0; } .bubble p:last-child { margin-bottom: 0; }
+  .bubble table { border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+  .bubble th, .bubble td { border: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+  .cite { display: inline-block; min-width: 20px; padding: 0 5px; margin: 0 1px; border-radius: 6px; background: var(--accent-soft); color: var(--accent);
+          font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; border: none; font-family: inherit; line-height: 18px; vertical-align: 1px; }
+  .cite:hover, .cite.active { background: var(--accent); color: var(--panel); }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .examples { max-width: 780px; margin: 40px auto; }
+  .examples h2 { font-size: 22px; margin: 0 0 6px; }
+  .examples p { color: var(--muted); margin: 0 0 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 7px 13px; cursor: pointer; font: inherit; font-size: 13px; text-align: left; }
+  .chip:hover { border-color: var(--accent); }
+  form { border-top: 1px solid var(--line); padding: 14px 24px; }
+  .inputrow { max-width: 780px; margin: 0 auto; display: flex; gap: 8px; }
+  textarea { flex: 1; resize: none; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 12px; padding: 11px 14px; font: inherit; min-height: 46px; max-height: 160px; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button.send { background: var(--accent); color: #fff; border: 0; border-radius: 12px; padding: 0 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.send:disabled { opacity: .5; cursor: default; }
+  aside { border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 18px; }
+  aside h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 12px; }
+  .src { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; cursor: pointer; }
+  .src.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .src .head { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; font-weight: 600; }
+  .badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; color: #fff; }
+  .src .body { color: var(--muted); max-height: 4.6em; overflow: hidden; overflow-wrap: anywhere; }
+  .src .body p { margin: 0 0 6px; } .src .body ul { margin: 0 0 6px; padding-left: 18px; }
+  .src .body table { border-collapse: collapse; margin: 4px 0 8px; font-size: 12px; width: 100%; }
+  .src .body th, .src .body td { border: 1px solid var(--line); padding: 2px 6px; text-align: left; }
+  .src.active .body { max-height: none; }
+  .src img { width: 100%; border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; display: none; }
+  .src.active img { display: block; }
+  .empty { color: var(--muted); font-size: 13px; }
+  .typing { color: var(--muted); font-style: italic; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+    #log { padding: 16px; } form { padding: 12px 16px; } header { padding: 14px 16px; }
+    aside { border-left: 0; border-top: 1px solid var(--line); }
+    header { flex-direction: column; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <main>
+    <header><h1>iMac Environmental Report</h1><span>Multimodal RAG over text, tables, charts and endnotes</span></header>
+    <div id="log">
+      <div class="examples" id="examples">
+        <h2>Ask the report</h2>
+        <p>Answers are grounded in the October 2024 Product Environmental Report and cite the exact table, chart, endnote or passage.</p>
+        <div class="chips"></div>
+      </div>
+    </div>
+    <form id="f">
+      <div class="inputrow">
+        <textarea id="q" rows="1" placeholder="Ask about the report…"></textarea>
+        <button class="send" id="send">Ask</button>
+      </div>
+    </form>
+  </main>
+  <aside>
+    <h3>Sources</h3>
+    <div id="sources"><div class="empty">Citations for the latest answer appear here. Click a [n] marker to open the source and its page.</div></div>
+  </aside>
+</div>
+<script>
+const EXAMPLES = [
+  "What is the total carbon footprint of the iMac (two ports) 256GB?",
+  "What is the iMac's power draw in sleep and idle at 115V?",
+  "Which reductions take the chart from 445 kg to 346 kg?",
+  "Is the power cord PVC-free in every country?",
+  "Does the recycled copper in the thermal module apply to all models?",
+  "What share of emissions comes from product use?",
+];
+const TYPE_COLORS = { table: "--t-table", figure: "--t-figure", callout: "--t-callout", footnote: "--t-footnote", text: "--t-text", summary: "--t-summary" };
+const log = document.getElementById("log"), q = document.getElementById("q"), send = document.getElementById("send");
+const history = [];
+let turn = 0;
+
+const chips = document.querySelector(".chips");
+EXAMPLES.forEach(e => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = e; b.onclick = () => ask(e); chips.appendChild(b); });
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function addMsg(role, html) {
+  document.getElementById("examples")?.remove();
+  const d = document.createElement("div"); d.className = "msg " + role;
+  d.innerHTML = `<div class="bubble">${html}</div>`; log.appendChild(d); log.scrollTop = log.scrollHeight; return d;
+}
+
+function renderSources(r, t) {
+  const box = document.getElementById("sources");
+  if (!r.citations.length) { box.innerHTML = '<div class="empty">No citations for this answer.</div>'; return; }
+  box.innerHTML = r.citations.map(c => `
+    <div class="src" id="src-${t}-${c.n}" data-n="${c.n}">
+      <div class="head"><span>[${c.n}]</span>
+        <span class="badge" style="background:var(${TYPE_COLORS[c.type] || "--t-text"})">${c.type}</span>
+        <span>page ${c.page}</span></div>
+      <div class="body">${marked.parse(esc(c.text))}</div>
+      <img loading="lazy" alt="Report page ${c.page}" src="/pages/${c.page}.png">
+    </div>`).join("");
+  box.querySelectorAll(".src").forEach(el => el.onclick = () => el.classList.toggle("active"));
+}
+
+function focusSource(t, n) {
+  document.querySelectorAll(".src.active, .cite.active").forEach(e => e.classList.remove("active"));
+  const el = document.getElementById(`src-${t}-${n}`);
+  if (el) { el.classList.add("active"); el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+}
+
+async function ask(question) {
+  question = question.trim(); if (!question) return;
+  addMsg("user", esc(question));
+  const pending = addMsg("bot", '<span class="typing">Searching text, tables, charts and endnotes…</span>');
+  send.disabled = true; q.value = "";
+  try {
+    const res = await fetch("/ask", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history: history.slice(-6) }) });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.detail || res.statusText);
+    const t = ++turn;
+    let html = marked.parse(r.answer);
+    const valid = new Set(r.citations.map(c => c.n));
+    html = html.replace(/\[(\d{1,2})\]/g, (m, n) => valid.has(+n) ? `<button class="cite" data-t="${t}" data-n="${n}">${n}</button>` : m);
+    const meta = `${r.model} · ${r.latency_s.total}s` + (r.image_pages.length ? ` · page images: ${r.image_pages.join(", ")}` : "");
+    pending.querySelector(".bubble").innerHTML = html + `<div class="meta">${esc(meta)}</div>`;
+    pending.querySelectorAll(".cite").forEach(b => b.onclick = () => { renderSources(r, t); focusSource(t, b.dataset.n); b.classList.add("active"); });
+    renderSources(r, t);
+    history.push({ role: "user", content: question }, { role: "assistant", content: r.answer });
+  } catch (e) {
+    pending.querySelector(".bubble").innerHTML = `<span style="color:var(--t-footnote)">Error: ${esc(String(e.message || e))}</span>`;
+  } finally { send.disabled = false; q.focus(); }
+}
+
+document.getElementById("f").onsubmit = e => { e.preventDefault(); ask(q.value); };
+q.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(q.value); } });
+q.addEventListener("input", () => { q.style.height = "auto"; q.style.height = q.scrollHeight + "px"; });
+</script>
+</body>
+</html>

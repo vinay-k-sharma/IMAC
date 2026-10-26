@@ -1,0 +1,50 @@
+Evaluating 30 questions
+
+== Retrieval ablation ==
+hybrid (full)              hit@1=1.00 hit@3=1.00 hit@5=1.00 hit@8=1.00 MRR=1.00 misses=[]
+dense only                 hit@1=1.00 hit@3=1.00 hit@5=1.00 hit@8=1.00 MRR=1.00 misses=[]
+bm25 only                  hit@1=0.93 hit@3=1.00 hit@5=1.00 hit@8=1.00 MRR=0.96 misses=[]
+hybrid, no vision layer    hit@1=0.71 hit@3=0.75 hit@5=0.75 hit@8=0.75 MRR=0.73 misses=['q05', 'q06', 'q07', 'q08', 'q10', 'q11', 'q12']
+
+== End-to-end ==
+q01 [table          ] kw=Y judge=Y  14.3s  What is the total carbon footprint of the iMac (two ports) 256GB?
+q02 [table          ] kw=Y judge=Y   4.7s  What is the carbon footprint of the iMac with four ports and 512GB?
+q03 [table          ] kw=Y judge=Y   5.3s  What share of the iMac's life cycle emissions comes from product use v
+q04 [table          ] kw=Y judge=Y   4.1s  What are Apple's scope 2 emissions for the iMac?
+q05 [table          ] kw=Y judge=Y   4.5s  How much power does the iMac draw in sleep mode at 115V?
+q06 [table          ] kw=Y judge=Y   4.9s  What is the iMac's idle power with the display on at 230V?
+q07 [table          ] kw=Y judge=Y   4.1s  What is the power adapter efficiency at 100V, 115V and 230V?
+q08 [table          ] kw=Y judge=Y  10.1s  How much power does the iMac use when switched off at 100V?
+q09 [table          ] kw=Y judge=Y   5.1s  What is the end-of-life processing share of the iMac carbon footprint?
+q10 [chart          ] kw=Y judge=Y   4.0s  In the progress toward carbon neutral chart, what were the baseline em
+q11 [chart          ] kw=Y judge=Y   4.2s  Which categories of emissions reductions are shown in the waterfall ch
+q12 [chart          ] kw=Y judge=Y   4.1s  Which segment is the largest in the baseline emissions bar of the char
+q13 [chart+footnote ] kw=Y judge=Y   3.5s  Why can't I see renewable energy emissions on the emissions chart?
+q14 [text           ] kw=Y judge=Y   3.8s  By how much did recycled content reduce total product emissions, and h
+q15 [callout        ] kw=Y judge=Y   4.6s  What percentage of recycled content is in the iMac's fiber packaging?
+q16 [callout        ] kw=Y judge=?   4.8s  How much less energy does the iMac use than the ENERGY STAR requiremen
+q17 [infographic    ] kw=N judge=?   2.3s  How many components use at least 50 percent recycled plastic?
+q18 [infographic    ] kw=N judge=?   2.2s  What share of the device's total rare earth elements do the magnets re
+q19 [footnote       ] kw=N judge=?   2.3s  Does the 100 percent recycled copper in the thermal module apply to ev
+q20 [footnote       ] kw=N judge=?   2.0s  In which countries is the iMac's AC power cord not free of PVC and pht
+q21 [footnote       ] kw=Y judge=Y   3.7s  What EPEAT rating did the iMac achieve and where?
+q22 [footnote       ] kw=Y judge=Y  59.2s  Which power adapter and cables were used when testing the iMac's energ
+q23 [footnote       ] kw=Y judge=Y   4.8s  What baseline year does Apple use for material carbon intensity in its
+q24 [footnote       ] kw=Y judge=Y   4.0s  What diversion rate is required for Zero Waste to Landfill certificati
+q25 [footnote       ] kw=Y judge=Y   5.9s  What does the recycled content percentage exclude?
+q26 [footnote       ] kw=Y judge=Y   4.6s  After how many minutes of inactivity does the iMac enter sleep mode in
+q27 [footnote+chart ] kw=Y judge=Y   4.4s  According to its endnote, which configuration is the 346 kg iMac emiss
+q28 [text           ] kw=Y judge=Y   6.7s  How many years of power use does Apple assume for macOS devices in its
+q29 [negative       ] kw=Y judge=Y   4.5s  How much water is used to manufacture the iMac?
+q30 [negative       ] kw=Y judge=?   3.7s  What is the carbon footprint of the 27-inch iMac from 2020?
+
+keyword accuracy=0.867  judge accuracy=1.0  answers with citations=0.857  invalid citations=0  median latency=4.47s
+  callout      n=2   keyword=1.0  judge=1.0
+  chart        n=4   keyword=1.0  judge=1.0
+  footnote     n=9   keyword=0.778  judge=1.0
+  infographic  n=2   keyword=0.0  judge=None
+  negative     n=2   keyword=1.0  judge=1.0
+  table        n=9   keyword=1.0  judge=1.0
+  text         n=2   keyword=1.0  judge=1.0
+
+Saved /Users/mac/Desktop/IMAC/evaluation/results/eval_20261017_181439.json
